@@ -14,7 +14,17 @@ return new class extends Migration
     public function up()
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
+
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('customer_id');
+
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+
+            $table->integer('amount');
+            $table->string('status');   // B(Billed), P(Paid), V(Void)
+            $table->dateTime('billed_date');
+            $table->dateTime('paid_date')->nullable();
+
             $table->timestamps();
         });
     }
