@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Resources\V1\CustomerCollection;
+use App\Http\Resources\V1\CustomerResource;
 
 class CustomerController extends Controller
 {
@@ -16,7 +18,11 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return Customer::all();
+        // CustomerCollection will assume that there is a CustomerResource
+        // and uses that to transform every record accordingly
+
+        // return new CustomerCollection(Customer::all()); // returns all data
+        return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
     }
 
     /**
@@ -38,7 +44,7 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        //
+        return new CustomerResource($customer);
     }
 
     /**
