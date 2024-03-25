@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\V1\InvoiceCollection;
 use App\Http\Resources\V1\InvoiceResource;
+use Exception;
 
 class InvoiceController extends Controller
 {
@@ -19,7 +21,11 @@ class InvoiceController extends Controller
     public function index()
     {
         // return new InvoiceCollection(Invoice::all());
-        return new InvoiceCollection(Invoice::paginate());
+        try {
+            return new InvoiceCollection(Invoice::paginate());
+        } catch (Exception) {
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 
     /**
@@ -39,9 +45,18 @@ class InvoiceController extends Controller
      * @param  \App\Models\Invoice  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function show(Invoice $invoice)
+    public function show($id)
     {
-        return new InvoiceResource($invoice);
+        try {
+            $invoice = Invoice::find($id);
+            if ($invoice) {
+                return new InvoiceResource($invoice);
+            } else {
+                return response()->json(ApiException::NOT_FOUND);
+            }
+        } catch (Exception) {
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 
     /**

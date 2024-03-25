@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\V1\CustomerCollection;
 use App\Http\Resources\V1\CustomerResource;
+use Exception;
 
 class CustomerController extends Controller
 {
@@ -22,7 +24,11 @@ class CustomerController extends Controller
         // and uses that to transform every record accordingly
 
         // return new CustomerCollection(Customer::all()); // returns all data
-        return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
+        try {
+            return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
+        } catch (Exception) {
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 
     /**
@@ -42,9 +48,18 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function show(Customer $customer)
+    public function show($id)
     {
-        return new CustomerResource($customer);
+        try {
+            $customer = Customer::find($id);
+            if ($customer) {
+                return new CustomerResource($customer);
+            } else {
+                return response()->json(ApiException::NOT_FOUND);
+            }
+        } catch (Exception) {
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 
     /**
