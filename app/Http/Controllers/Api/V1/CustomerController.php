@@ -22,20 +22,23 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        // CustomerCollection will assume that there is a CustomerResource
-        // and uses that to transform every record accordingly
-
-        // return new CustomerCollection(Customer::all()); // returns all data
         try {
+
             $filter = new CustomerFilter();
-            $queryItems = $filter->transform($request); // return [[colum,operator,value], [etc...]]
-            if (count($queryItems) == 0) {
-                return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
-            } else {
-                $customers = Customer::where($queryItems)->paginate();
-                return new CustomerCollection($customers->appends($request->query())); // append the query string to page links
+            $filterItems = $filter->transform($request);
+
+            // include invoices if the client requested it
+            $includeInvoices = $request->query('includeInvoices');
+
+            $customers = Customer::where($filterItems);
+
+            if ($includeInvoices) {
+                $customers = $customers->with('invoices');  // load relationship
             }
+
+            return new CustomerCollection($customers->paginate()->appends($request->query()));
         } catch (Exception) {
+
             return response()->json(ApiException::SERVER_ERROR);
         }
     }
@@ -60,13 +63,26 @@ class CustomerController extends Controller
     public function show($id)
     {
         try {
+
             $customer = Customer::find($id);
+
             if ($customer) {
+
+                // include invoices if the client requested it
+                $includeInvoices = request()->query('includeInvoices');
+
+                if ($includeInvoices) {
+
+                    return new CustomerResource($customer->loadMissing('invoices'));
+                }
+
                 return new CustomerResource($customer);
             } else {
+
                 return response()->json(ApiException::NOT_FOUND);
             }
         } catch (Exception) {
+
             return response()->json(ApiException::SERVER_ERROR);
         }
     }
