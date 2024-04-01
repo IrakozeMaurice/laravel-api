@@ -9,7 +9,9 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\V1\CustomerCollection;
 use App\Http\Resources\V1\CustomerResource;
+use App\Services\V1\CustomerQuery;
 use Exception;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -18,14 +20,20 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // CustomerCollection will assume that there is a CustomerResource
         // and uses that to transform every record accordingly
 
         // return new CustomerCollection(Customer::all()); // returns all data
         try {
-            return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
+            $filter = new CustomerQuery();
+            $queryItems = $filter->transform($request); // return [[colum,operator,value], [etc...]]
+            if (count($queryItems) == 0) {
+                return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
+            } else {
+                return new CustomerCollection(Customer::where($queryItems)->paginate());
+            }
         } catch (Exception) {
             return response()->json(ApiException::SERVER_ERROR);
         }

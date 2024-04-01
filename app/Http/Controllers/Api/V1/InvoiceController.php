@@ -9,7 +9,9 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\V1\InvoiceCollection;
 use App\Http\Resources\V1\InvoiceResource;
+use App\Services\V1\InvoiceQuery;
 use Exception;
+use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
@@ -18,11 +20,19 @@ class InvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         // return new InvoiceCollection(Invoice::all());
         try {
-            return new InvoiceCollection(Invoice::paginate());
+
+            $filter = new InvoiceQuery();
+            $queryItems = $filter->transform($request);
+
+            if (count($queryItems) == 0) {
+                return new InvoiceCollection(Invoice::paginate());
+            } else {
+                return new InvoiceCollection(Invoice::where($queryItems)->paginate());
+            }
         } catch (Exception) {
             return response()->json(ApiException::SERVER_ERROR);
         }
