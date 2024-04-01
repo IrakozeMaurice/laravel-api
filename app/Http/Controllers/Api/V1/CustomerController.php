@@ -9,7 +9,7 @@ use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Http\Resources\V1\CustomerCollection;
 use App\Http\Resources\V1\CustomerResource;
-use App\Services\V1\CustomerQuery;
+use App\Filters\V1\CustomerFilter;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -27,12 +27,13 @@ class CustomerController extends Controller
 
         // return new CustomerCollection(Customer::all()); // returns all data
         try {
-            $filter = new CustomerQuery();
+            $filter = new CustomerFilter();
             $queryItems = $filter->transform($request); // return [[colum,operator,value], [etc...]]
             if (count($queryItems) == 0) {
                 return new CustomerCollection(Customer::paginate(10)); // paginate the data (10 results per page)
             } else {
-                return new CustomerCollection(Customer::where($queryItems)->paginate());
+                $customers = Customer::where($queryItems)->paginate();
+                return new CustomerCollection($customers->appends($request->query())); // append the query string to page links
             }
         } catch (Exception) {
             return response()->json(ApiException::SERVER_ERROR);
