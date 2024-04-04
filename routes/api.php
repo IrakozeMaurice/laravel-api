@@ -25,4 +25,7 @@ Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\Api\V1'], f
     // apiResource creates all necessary api endpoints excluding (create and edit)
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('invoices', InvoiceController::class);
+
+    // bulk insert invoices
+    Route::post('invoices/bulk', [InvoiceController::class, 'bulkStore']);
 });
