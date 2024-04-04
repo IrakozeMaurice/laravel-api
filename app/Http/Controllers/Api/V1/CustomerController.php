@@ -94,9 +94,23 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateCustomerRequest $request, Customer $customer)
+    public function update(UpdateCustomerRequest $request, $id)
     {
-        //
+        try {
+
+            $customer = Customer::find($id);
+
+            if ($customer) {
+
+                $customer->update($request->all());
+            } else {
+
+                return response()->json(ApiException::NOT_FOUND);
+            }
+        } catch (Exception) {
+
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 
     /**
