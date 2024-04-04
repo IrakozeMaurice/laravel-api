@@ -119,8 +119,22 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Customer $customer)
+    public function destroy($id)
     {
-        //
+        try {
+
+            $customer = Customer::find($id);
+
+            if ($customer) {
+
+                $customer->delete();
+            } else {
+
+                return response()->json(ApiException::NOT_FOUND);
+            }
+        } catch (Exception) {
+
+            return response()->json(ApiException::SERVER_ERROR);
+        }
     }
 }
